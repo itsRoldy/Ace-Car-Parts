@@ -1,10 +1,11 @@
+import React from "react";
 import NotesPage from "./pages/NotesPage.jsx"
 
-
 function App() {
-    return (<div id="app">
-        <NotesPage />
-    </div>
+    return (
+        <div id="app">
+            <NotesPage />
+        </div>
     );
 }
 

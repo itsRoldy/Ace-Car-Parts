@@ -7,7 +7,7 @@ import { GLOBAL_SIZE } from "../assets/fakeData";
 
 export const gridSize = 25 // Grid size for snapping
 
-const NoteCard = ({ note, onContextMenu, allNotes, onPositionChange, onDragStart, onDragEnd }) => {
+const NoteCard = ({ note, onContextMenu, allNotes, onPositionChange, onDragStart, onDragEnd, onPanningStateChange, isSelected }) => {
   const body = JSON.parse(note.body);
   const [position, setPosition] = useState(note.position || { x: 0, y: 0 });
   const noteData = note.noteData ? JSON.parse(note.noteData) : [];
@@ -15,22 +15,22 @@ const NoteCard = ({ note, onContextMenu, allNotes, onPositionChange, onDragStart
   const cardRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false); // Track hover state
   const [isDragging, setIsDragging] = useState(false); // Track dragging state
+  //const [isPanningDisabled, setIsPanningDisabled] = useState(false);
 
   let mouseStartPos = { x: 0, y: 0 };
 
-  
-  const mouseDown = (e) => {
+  const handleMouseDown = (e) => {
     setIsDragging(true);
+    onPanningStateChange(true)
     mouseStartPos.x = e.clientX;
     mouseStartPos.y = e.clientY;
-
-    document.addEventListener("mousemove", mouseMove);
-    document.addEventListener("mouseup", mouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
 
     setZIndex(cardRef.current);
   };
 
-  const mouseMove = (e) => {
+  const handleMouseMove = (e) => {
     const mouseMoveDir = {
       x: mouseStartPos.x - e.clientX,
       y: mouseStartPos.y - e.clientY,
@@ -41,19 +41,19 @@ const NoteCard = ({ note, onContextMenu, allNotes, onPositionChange, onDragStart
 
     const newPosition = setNewOffset(cardRef.current, mouseMoveDir, padding);
     setPosition(newPosition);
-
     onPositionChange({ ...note, position: newPosition })
-    //console.log("mouseMove", allNotes)
+
   };
 
-  const mouseUp = () => {
+  const handleMouseUp = () => {
     setIsDragging(false);
-    document.removeEventListener("mousemove", mouseMove);
-    document.removeEventListener("mouseup", mouseUp);
+    onPanningStateChange(false)
+
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
 
     snapToGrid(cardRef.current, padding, gridSize);
 
-    //console.log("mouseUp", allNotes)
   };
 
   const cursorStyle = isHovered || isDragging ? "pointer" : "auto";
@@ -64,16 +64,20 @@ const NoteCard = ({ note, onContextMenu, allNotes, onPositionChange, onDragStart
       ref={cardRef}
       className="card"
       style={{
-        backgroundColor: noteData.colorBody || "blue",
+        backgroundColor: isSelected ? "rgba(0, 123, 255, 0.1)" : noteData.colorBody || "blue",
+        //backgroundColor: noteData.colorBody || "blue",
         width: width,
         height: height,
         left: `${position.x}px`,
         top: `${position.y}px`,
-        border: isHovered ? "3px solid #FFD700" : "1px solid transparent",
+        border: isSelected ? "2px solid #007bff" : isHovered ? "3px solid #FFD700" : "1px solid transparent",
+        //border: isHovered ? "3px solid #FFD700" : "1px solid transparent",
         boxSizing: "border-box",
-        transition: "border 0.3s ease",
+        transition: "border 0.3s ease, background-color 0.3s ease",
+        //transition: "border 0.3s ease",
         cursor: cursorStyle,
-        boxShadow: isHovered ? "0 0 10px rgba(255, 215, 0, 0.7)" : "none",
+        boxShadow: isHovered ? "0 0 10px rgba(255, 215, 0, 0.7)" : isSelected ? "0 0 10px rgba(0, 123, 255, 0.7)" : "none",
+        //boxShadow: isHovered ? "0 0 10px rgba(255, 215, 0, 0.7)" : "none",
         transform: isHovered ? "scale(1.05)" : "scale(1)",
         transformOrigin: "center",
         zIndex: 10,
@@ -86,7 +90,7 @@ const NoteCard = ({ note, onContextMenu, allNotes, onPositionChange, onDragStart
       onContextMenu={(e) => onContextMenu(e, note)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onMouseDown={mouseDown}
+      onMouseDown={handleMouseDown}
     >
       <textarea
         style={{
