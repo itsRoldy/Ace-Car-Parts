@@ -81,6 +81,7 @@ const CardContextMenu = ({ position, onClose, onEdit, onAdd, onDelete, onInfo })
     >
       {menuOptions.map((option, index) => (
         <div
+          className="'.context-menu'"
           key={index}
           style={{
             padding: "8px",

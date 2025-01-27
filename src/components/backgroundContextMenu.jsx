@@ -21,6 +21,7 @@ const BackgroundContextMenu = ({ position, onClose, onAdd }) => {
 
   return (
     <div
+      className="'.context-menu'"
       style={{
         position: "absolute",
         top: position.y,
