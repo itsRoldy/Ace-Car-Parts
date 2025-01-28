@@ -1,3 +1,3 @@
 If the code for MapInteractionCSS is uncommented, the dropdown for "Parts Unavailable" won't opened when clicked. The dropdown opens when the code for MapInteractionCSS is commented.
 Do I need onMouseDown for NoteCard?
-When the info popup is opened and I right click on a note, the popup does not close.
+Right clicking on a context menu should not close it and bring up another, right clicking on info popup should not close it and bring up the background context menu
