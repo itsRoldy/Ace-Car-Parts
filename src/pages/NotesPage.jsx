@@ -636,6 +636,13 @@ const NotesPage = () => {
   }
 
   const handleBackgroundContextMenu = (e) => {
+    // Prevent right-click from closing the popup when inside
+    if (infoPopup && e.target.closest(".info-popup")) {
+      e.preventDefault()
+      e.stopPropagation()
+      return
+    }
+
     e.preventDefault()
     e.stopPropagation()
 
@@ -651,6 +658,11 @@ const NotesPage = () => {
   }
 
   const closeContextMenus = (e) => {
+    // Check if the click happened inside the info popup
+    if (infoPopup && e.target.closest(".info-popup")) {
+      return // Don't close the context menus if clicking inside the popup
+    }
+
     setNoteContextMenu(null);
     setBackgroundContextMenu(null);
   };
