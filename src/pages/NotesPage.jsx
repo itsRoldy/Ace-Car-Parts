@@ -543,6 +543,10 @@ const NotesPage = () => {
   const [isPanningDisabled, setIsPanningDisabled] = useState(false)
   const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 },})
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [infoPopupPosition, setInfoPopupPosition] = useState({ x: 0, y: 0 })
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
 
   const SPACING = 120;
 
@@ -637,7 +641,12 @@ const NotesPage = () => {
 
   const handleMouseDown = (e, note) => {
     e.preventDefault()
-    e.stopPropagation
+    e.stopPropagation()
+
+    if (isInfoPopupOpen()) {
+      // Do nothing if the info popup is open
+      return
+    }
 
     if (e.button === 0) { //  Left click
       console.log('left')
@@ -645,18 +654,46 @@ const NotesPage = () => {
       if (note) {
         setNoteContextMenu(null) // Close the note context menu on left click
       }
-    } else if (e.button === 2 && note) { // Right click on a note
+    } else if (e.button === 2) { // Right click
       console.log('right')
+      if (note) { // Open the note context menu if clicked on a note
+        setBackgroundContextMenu(null)
         setNoteContextMenu({
           x: e.clientX,
           y: e.clientY,
           note: note,
         })
+      } else if (!isClickInsideContextMenu(e)) { // Only open the background context menu if clicked outside of the note context menu
+          setNoteContextMenu(null)
+          setBackgroundContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+          })
+        }
+      }
     }
+
+  const isClickInsideContextMenu = (e) => {
+    const contextMenu = document.querySelector('.note-context-menu')
+    if (contextMenu) {
+      const rect = contextMenu.getBoundingClientRect()
+      return (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      )
+    }
+    return false
+  }
+
+  const isInfoPopupOpen = () => {
+    const infoPopup = document.querySelector('.info-popup')
+    return infoPopup !== null
   }
 
 
-  const handleOptionSelect = (action, note = null) => {
+  const handleOptionSelect = (action, note = null, e = null) => {
     if (action === "addNote") {
       if (backgroundContextMenu) {
         const { x, y } = backgroundContextMenu;
@@ -673,12 +710,23 @@ const NotesPage = () => {
       console.log("noteData", noteData)
       console.log("noteData.vehicleInfo:", noteData.vehicleInfo)
 
-      setInfoPopup({
+      if (e) {
+      setInfoPopupPosition({
         x: note.position.x + 250,
         y: note.position.y,
-        note,
-          info: { VIN, partsUnavail, motorType, mileage },
       })
+    }
+      setInfoPopup({
+        note,
+        info: noteData
+      })
+      
+      // setInfoPopup({
+      //   x: note.position.x + 250,
+      //   y: note.position.y,
+      //   note,
+      //     info: { VIN, partsUnavail, motorType, mileage },
+      // })
     }
 
     if (action === "deleteNote" && note) {
@@ -703,10 +751,23 @@ const NotesPage = () => {
       setNotes(sortedNotes)
       setFilteredNotes(sortedNotes)
     }
-
-    //closeContextMenus();
+    setNoteContextMenu(null)
   };
 
+  const handleInfoPopupMouseDown = (e) => {
+    setIsDragging(true)
+    setDragStart({ x:clientX - infoPopupPosition.x, y:clientY - infoPopupPosition.y })
+  }
+
+  const handleMouseMove = (e) => {
+    if (isDragging) {
+      setInfoPopupPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
 
   const addNoteAtPosition = (x, y) => {
     const newNote = {
@@ -747,43 +808,60 @@ const NotesPage = () => {
     setFilteredNotes(filtered)
   }
 
-  const handleMouseMove = (e) => {
-    if (dragging && infoPopup) {
-      setIsPanningDisabled(true)
-
-      const newX = e.clientX - dragOffset.x;
-      const newY = e.clientY - dragOffset.y;
-      setNoteContextMenu((prevPopup) => ({
-        ...prevPopup,
-        x: newX,
-        y: newY,
-      }));
-    }
-  };
-
-  const handleMouseUp = () => {
-    setDragging(false);
-    setIsPanningDisabled(false)
-  };
-
   useEffect(() => {
-    // Add event listeners for mouse move and mouse up
-    if (dragging) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-      window.addEventListener("mousedown", handleMouseDown)
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove)
+      window.addEventListener("mouseup", handleMouseUp)
     } else {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.addEventListener("mousedown", handleMouseDown)
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
     }
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      window.removeEventListener("mousedown", handleMouseDown)
-    };
-  }, [dragging]);
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isDragging])
+
+
+
+  // const handleMouseMove = (e) => {
+  //   if (dragging && infoPopup) {
+  //     setIsPanningDisabled(true)
+
+  //     const newX = e.clientX - dragOffset.x;
+  //     const newY = e.clientY - dragOffset.y;
+  //     setNoteContextMenu((prevPopup) => ({
+  //       ...prevPopup,
+  //       x: newX,
+  //       y: newY,
+  //     }));
+  //   }
+  // };
+
+  // const handleMouseUp = () => {
+  //   setDragging(false);
+  //   setIsPanningDisabled(false)
+  // };
+
+  // useEffect(() => {
+  //   // Add event listeners for mouse move and mouse up
+  //   if (dragging) {
+  //     window.addEventListener("mousemove", handleMouseMove);
+  //     window.addEventListener("mouseup", handleMouseUp);
+  //     window.addEventListener("mousedown", handleMouseDown)
+  //   } else {
+  //     window.removeEventListener("mousemove", handleMouseMove);
+  //     window.removeEventListener("mouseup", handleMouseUp);
+  //     window.addEventListener("mousedown", handleMouseDown)
+  //   }
+
+  //   return () => {
+  //     window.removeEventListener("mousemove", handleMouseMove);
+  //     window.removeEventListener("mouseup", handleMouseUp);
+  //     window.removeEventListener("mousedown", handleMouseDown)
+  //   };
+  // }, [dragging]);
 
 
 
@@ -869,7 +947,7 @@ const NotesPage = () => {
 
       {backgroundContextMenu && (
         <ContextMenu
-          className="context-menu"
+          className="background-context-menu"
           x={backgroundContextMenu.x}
           y={backgroundContextMenu.y}
           type="background"
@@ -883,7 +961,7 @@ const NotesPage = () => {
 
       {noteContextMenu && (
         <ContextMenu
-          className="context-menu"
+          className="note-context-menu"
           x={noteContextMenu.x}
           y={noteContextMenu.y}
           type="note"
@@ -902,8 +980,8 @@ const NotesPage = () => {
           className="info-popup"
           style={{
             position: "absolute",
-            left: infoPopup.x,
-            top: infoPopup.y,
+            left: infoPopupPosition.x,
+            top: infoPopupPosition.y,
             padding: "10px",
             backgroundColor: "#2E2E2E",
             color: "#FFFFFF",
@@ -917,8 +995,7 @@ const NotesPage = () => {
             cursor: "pointer", // Indicate that it's draggable
             overflow: "visible",
           }}
-          onMouseDown={handleMouseDown}
-          //<p><strong>Parts Unavailable:</strong> {infoPopup.info.partsUnavail.join(", ")}</p>
+          onMouseDown={handleInfoPopupMouseDown}
         >
           <h3>{infoPopup.note.title}</h3>
           <p><strong>VIN:</strong> {infoPopup.info.VIN}</p>
@@ -943,11 +1020,11 @@ const NotesPage = () => {
               onMouseDown={(e) => e.stopPropagation()} // Prevents conflicts with MapInteractionsCSS              
             >
               <option value="" disabled>Click to view</option>
-              {infoPopup.info.partsUnavail.map((part, index) => (
+              {/* {infoPopup.info.partsUnavail.map((part, index) => (
                   <option key={index} value={part.value}>
                     {part.label}
                   </option>
-              ))}
+              ))} */}
             </select>
           </div>
 
