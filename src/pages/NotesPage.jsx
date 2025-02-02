@@ -656,21 +656,34 @@ const NotesPage = () => {
       }
     } else if (e.button === 2) { // Right click
       console.log('right')
-      if (note) { // Open the note context menu if clicked on a note
+      const { scale, translation } = transform
+
+      // Adjust the menu position based on the pan and zoom
+      const adjustedX = (e.clientX - translation.x) / scale
+      const adjustedY = (e.clientY - translation.y) / scale
+
+      if (note) { // Open the note context menu if right clicked on a note
         setBackgroundContextMenu(null)
         setNoteContextMenu({
-          x: e.clientX,
-          y: e.clientY,
+          x: adjustedX,
+          y: adjustedY,
           note: note,
         })
       } else if (!isClickInsideContextMenu(e)) { // Only open the background context menu if clicked outside of the note context menu
-          setNoteContextMenu(null)
+        console.log(!isClickInsideContextMenu)
+        console.log('here now')
+          setNoteContextMenu(null) // Comment this to make 
+          const { scale, translation } = transform
+
+          // Adjust the menu position based on the pan and zoom
+          const adjustedX = (e.clientX - translation.x) / scale
+          const adjustedY = (e.clientY - translation.y) / scale          
           setBackgroundContextMenu({
-            x: e.clientX,
-            y: e.clientY,
+            x: adjustedX,
+            y: adjustedY,
           })
         }
-      }
+      }        
     }
 
   const isClickInsideContextMenu = (e) => {
@@ -710,23 +723,15 @@ const NotesPage = () => {
       console.log("noteData", noteData)
       console.log("noteData.vehicleInfo:", noteData.vehicleInfo)
 
-      if (e) {
       setInfoPopupPosition({
         x: note.position.x + 250,
         y: note.position.y,
       })
-    }
+
       setInfoPopup({
         note,
         info: noteData
       })
-      
-      // setInfoPopup({
-      //   x: note.position.x + 250,
-      //   y: note.position.y,
-      //   note,
-      //     info: { VIN, partsUnavail, motorType, mileage },
-      // })
     }
 
     if (action === "deleteNote" && note) {
@@ -755,17 +760,29 @@ const NotesPage = () => {
   };
 
   const handleInfoPopupMouseDown = (e) => {
+    e.stopPropagation()
+    e.preventDefault()
     setIsDragging(true)
-    setDragStart({ x:clientX - infoPopupPosition.x, y:clientY - infoPopupPosition.y })
+    setDragStart({
+      x: e.clientX - infoPopupPosition.x,
+      y: e.clientY - infoPopupPosition.y
+    })
   }
 
   const handleMouseMove = (e) => {
+    e.stopPropagation()
+    e.preventDefault()
     if (isDragging) {
-      setInfoPopupPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
+      setInfoPopupPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      })
     }
   }
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e) => {
+    e.stopPropagation()
+    e.preventDefault()
     setIsDragging(false)
   }
 
@@ -971,7 +988,10 @@ const NotesPage = () => {
             position: "absolute",
             transform: `translate(${noteContextMenu.x}px, ${noteContextMenu.y}px)`,
           }}
-          //onMouseDown={handlecontextMenuMouseDown} // Add mousedown handler for dragging
+          onContextMenu={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
         />
       )}
 
@@ -996,6 +1016,8 @@ const NotesPage = () => {
             overflow: "visible",
           }}
           onMouseDown={handleInfoPopupMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
         >
           <h3>{infoPopup.note.title}</h3>
           <p><strong>VIN:</strong> {infoPopup.info.VIN}</p>
@@ -1020,11 +1042,6 @@ const NotesPage = () => {
               onMouseDown={(e) => e.stopPropagation()} // Prevents conflicts with MapInteractionsCSS              
             >
               <option value="" disabled>Click to view</option>
-              {/* {infoPopup.info.partsUnavail.map((part, index) => (
-                  <option key={index} value={part.value}>
-                    {part.label}
-                  </option>
-              ))} */}
             </select>
           </div>
 
