@@ -3,4 +3,5 @@ Do I need onMouseDown for NoteCard?
 
 Note context menu closes when user is panning. Context menu should remain open.
 As long as the info popup is open, don't allow mouse events to happen unless it is a panning action
-The info popup needs to pan with everything else and zoom
+A new info popup should close the previous popup
+

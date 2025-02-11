@@ -604,7 +604,17 @@ const NotesPage = () => {
         draggable={!isPanningDisabled}
         value={transform}
         onChange={(newTransform) => {
-          if (!isPanningDisabled) setTransform(newTransform);
+          if (!isPanningDisabled) {
+            setTransform(newTransform);
+
+            if (contextMenu) {
+              setContextMenu((prev) => ({
+                x: pprev.x + (newTransform.translation.x - transform.translation.x),
+                y: prev.y + (newTransform.translation.y - transform.translation.y),
+                note: prev.note,
+              }))
+            }
+          }
         }}
       >
         <div
@@ -628,21 +638,35 @@ const NotesPage = () => {
             allNotes={notes}
             onPositionChange={onPositionChange}
             onPanningStateChange={handlePanningStateChange}
-            //setGlobalContextMenu={setContextMenu}
-            //closeContextMenus={closeContextMenu}
+            transform={transform}
+
           />
         ))}
       </MapInteractionCSS>
 
     {/* Render Context Menu in Parent */}
-    {contextMenu && (
+    {contextMenu && contextMenu.x !== undefined && contextMenu.y !== undefined && (
+      <ContextMenu
+        x={contextMenu.x * transform.scale + transform.translation.x}
+        y={contextMenu.y * transform.scale + transform.translation.y}
+        note={contextMenu.note}
+        onOptionSelect={() => setContextMenu(null)}
+        style={{
+          position: "absolute",
+          left: `${contextMenu.x * transform.scale + transform.translation.x}px`,
+          top: `${contextMenu.y * transform.scale + transform.translation.y}px`,
+          zIndex: 1000,
+        }}
+      />
+    )}
+    {/* {contextMenu && (
       <ContextMenu
         x={contextMenu.absoluteX}
         y={contextMenu.absoluteY}
         note={contextMenu.note}
         onOptionSelect={() => setContextMenu(null)} // Close after selection
       />
-    )}
+    )} */}
     </div>
   );
 };

@@ -11,6 +11,7 @@ const menuStyle = {
   padding: "5px 0",
   whiteSpace: "nowrap",
   zIndex: 1000,
+  pointerEvents: "auto",
 };
 
 const menuItemStyle = {
@@ -39,31 +40,39 @@ const MENU_OPTIONS = {
 
 // Reusable Context Menu Component
 const ContextMenu = ({ x, y, type, onOptionSelect }) => {
+
   const options = MENU_OPTIONS[type] || []; // Select options based on the type
 
   const handleOptionClick = (e, action) => {
     e.stopPropagation()
-    onOptionSelect(action)
+
+    if (typeof onOptionSelect === "function") {
+      onOptionSelect(action)
+    } else {
+      console.error("onOptionSelect is not a function!", onOptionSelect)
+    }
   }
 
-
   return (
-    <div style={{ ...menuStyle, top: y, left: x }}>
+    <div
+      id="context-menu"
+      style={{ ...menuStyle, top: y, left: x }}>
       {options.map((option) => (
         <div
           key={option.action}
           style={menuItemStyle}
-          onMouseEnter={(e) =>
-            (e.target.style.backgroundColor = menuItemHoverStyle.backgroundColor)
-          }
+          onMouseEnter={(e) => (e.target.style.backgroundColor = menuItemHoverStyle.backgroundColor)}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
-          onClick={(e) => handleOptionClick(e, option.action)} // Prevent propagation here
+          onClick={(e) => {
+            handleOptionClick(e, option.action);  // Prevent propagation here
+          }}
         >
           {option.label}
         </div>
       ))}
     </div>
   );
+
 };
 
 export default ContextMenu;
