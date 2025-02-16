@@ -64,7 +64,7 @@ const ContextMenu = ({ x, y, type, onOptionSelect }) => {
           onMouseEnter={(e) => (e.target.style.backgroundColor = menuItemHoverStyle.backgroundColor)}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
           onClick={(e) => {
-            handleOptionClick(e, option.action);  // Prevent propagation here
+            handleOptionClick(e, option.action);
           }}
         >
           {option.label}

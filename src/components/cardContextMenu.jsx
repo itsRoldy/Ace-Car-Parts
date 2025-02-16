@@ -35,25 +35,6 @@ const CardContextMenu = ({ position, onClose, onEdit, onAdd, onDelete, onInfo })
     
   ]
 
-/*     const menuOptions = [
-        {
-            label: "Edit",
-            onClick: onEdit,
-        },
-        {
-            label: "Add",
-            onClick: onAdd,
-        },
-        {
-            label: "Delete",
-            onClick: onDelete,
-        },
-
-        {
-          label: "Info",
-          onClick: onInfo,
-      },
-    ] */
 
   const handleClickOutside = () => {
     onClose();
@@ -86,7 +67,6 @@ const CardContextMenu = ({ position, onClose, onEdit, onAdd, onDelete, onInfo })
           style={{
             padding: "8px",
             cursor: "pointer",
-            //borderBottom: index < menuOptions.length - 1 ? "1px solid #EEE" : "none",
           }}
           onClick={() => {
             option.onClick();

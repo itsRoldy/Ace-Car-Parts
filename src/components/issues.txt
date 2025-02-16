@@ -1,7 +1,0 @@
-If the code for MapInteractionCSS is uncommented, the dropdown for "Parts Unavailable" won't opened when clicked. The dropdown opens when the code for MapInteractionCSS is commented.
-Do I need onMouseDown for NoteCard?
-
-Note context menu closes when user is panning. Context menu should remain open.
-As long as the info popup is open, don't allow mouse events to happen unless it is a panning action
-A new info popup should close the previous popup
-
