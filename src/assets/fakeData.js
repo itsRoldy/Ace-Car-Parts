@@ -28,6 +28,7 @@ export const fakeData = [
         }),
         position: { x: 100, y: 50},
     },
+
      {
         $id: 2,
         body: JSON.stringify(
@@ -52,8 +53,8 @@ export const fakeData = [
             },
         }),
         position: { x: 100, y: 100 + 25 },
-
     },
+
     {
         $id: 3,
         body: JSON.stringify(
@@ -78,7 +79,6 @@ export const fakeData = [
             }
         }),
         position: { x: 100, y: 175 + 25 },
-
     },
 ];
 

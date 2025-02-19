@@ -1,5 +1,6 @@
 
-import React from "react";
+import React, { useEffect } from "react";
+import NoteCard from "./NoteCard";
 
 // Styles for the context menu
 const menuStyle = {
@@ -39,24 +40,41 @@ const MENU_OPTIONS = {
 };
 
 // Reusable Context Menu Component
-const ContextMenu = ({ x, y, type, onOptionSelect }) => {
+const ContextMenu = ({ x, y, type, onOptionSelect, noteLabel }) => {
 
+  useEffect(() => {
+    document.addEventListener("click", (e) => console.log("Click detected on:", e.target));
+    return () => document.removeEventListener("click", (e) => console.log("Click detected on:", e.target));
+  }, []);
+  
   const options = MENU_OPTIONS[type] || []; // Select options based on the type
 
   const handleOptionClick = (e, action) => {
     e.stopPropagation()
+    console.log('context menu option clicked', action)
 
-    if (typeof onOptionSelect === "function") {
-      onOptionSelect(action)
-    } else {
-      console.error("onOptionSelect is not a function!", onOptionSelect)
-    }
+    setTimeout(() => {
+
+      if (typeof onOptionSelect === "function") {
+        onOptionSelect(action)
+      } else {
+        console.error("onOptionSelect is not a function!", onOptionSelect)
+      }
+
+  }, 50);
   }
+
+
 
   return (
     <div
       id="context-menu"
       style={{ ...menuStyle, top: y, left: x }}>
+      {type === "note" && (
+        <div style={{ ...menuItemStyle, fontWeight: "bold" }}>
+          {noteLabel}
+        </div>
+      )}
       {options.map((option) => (
         <div
           key={option.action}
@@ -64,7 +82,9 @@ const ContextMenu = ({ x, y, type, onOptionSelect }) => {
           onMouseEnter={(e) => (e.target.style.backgroundColor = menuItemHoverStyle.backgroundColor)}
           onMouseLeave={(e) => (e.target.style.backgroundColor = "transparent")}
           onClick={(e) => {
+            e.stopPropagation()
             handleOptionClick(e, option.action);
+            console.log('context menu clicked', e.target)
           }}
         >
           {option.label}

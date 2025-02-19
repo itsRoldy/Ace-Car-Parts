@@ -1,0 +1,1 @@
+Panning should not close an already opened context menu
