@@ -1,11 +1,9 @@
-export const GLOBAL_SIZE = JSON.stringify({width: "200px", height: "50px", padding: "0px"})
+
+export const GLOBAL_SIZE = JSON.stringify({width: "200px", height: "50px", padding: "0px"});
 
 export const fakeData = [
     {
         $id: 1,
-        body: JSON.stringify(
-            'Chevy 1980'
-        ),
         noteData: JSON.stringify({
             id: "color-purple",
             width: GLOBAL_SIZE.width,
@@ -15,25 +13,26 @@ export const fakeData = [
             colorText: "#18181A",
             vehicleInfo: {
                 VIN: "7J3ZZ56T7834500003",
-                //partsUnavail: ["Front Bumper", "Passenger Fender"],
+                YEAR: "1980",
+                MAKE: "CHEVY",
+                MODEL: "SILVERADO",
+                MOTOR: "V8",
+                TRANS: "MANUAL",
+                DRIVETYPE: "4X4",
+                EXTCOLOR: "BLACK",
+                MILEAGE: "125,567",
                 partsUnavail: [
                     { label: "Front Bumper", value: "front_bumper" },
                     { label: "Passenger Fender", value: "passenger_fender" },
                     { label: "Alternator", value: "alternator" },
                     { label: "Passenger Headlight", value: "passenger_headlight" },
                 ],
-                motorType: "V8",
-                mileage: "125,567",
             },
         }),
-        position: { x: 100, y: 50},
+        position: { x: 100, y: 50 },
     },
-
-     {
+    {
         $id: 2,
-        body: JSON.stringify(
-            '1945 Ford'
-        ),
         noteData: JSON.stringify({
             id: "color-blue",
             width: GLOBAL_SIZE.width,
@@ -42,24 +41,25 @@ export const fakeData = [
             colorBody: "#A6DCE9",
             colorText: "#18181A",
             vehicleInfo: {
-                VIN: "1G1YZ23J9P5803427",
-                //partsUnavail: ["Engine", "Driver Door"],
+                VIN: "1HK503JB9P5523729",
+                YEAR: "1945",
+                MAKE: "HONDA",
+                MODEL: "ALTIMA",
+                MOTOR: "4 CYLINDER",
+                TRANS: "AUTOMATIC",
+                DRIVETYPE: "RWD",
+                EXTCOLOR: "RED",
+                MILEAGE: "103,503",
                 partsUnavail: [
                     { label: "Engine", value: "engine" },
                     { label: "Driver Door", value: "driver_door" },
                 ],
-                motorType: "4 Cylinder",
-                mileage: "218,390",
             },
         }),
         position: { x: 100, y: 100 + 25 },
     },
-
     {
         $id: 3,
-        body: JSON.stringify(
-            'Toyota'
-        ),
         noteData: JSON.stringify({
             id: "color-yellow",
             width: GLOBAL_SIZE.width,
@@ -68,17 +68,28 @@ export const fakeData = [
             colorBody: "#FFF5DF",
             colorText: "#18181A",
             vehicleInfo: {
-                VIN: "1G1YY25R695700001",
-                //partsUnavail: ["Transmission", "Radiator"],
+                VIN: "YG37025R495800501",
+                YEAR: "2000",
+                MAKE: "FORD",
+                MODEL: "F150",
+                MOTOR: "V6",
+                TRANS: "manual",
+                DRIVETYPE: "4X4",
+                EXTCOLOR: "GREY",
+                MILEAGE: "276,190",
                 partsUnavail: [
                     { label: "Transmission", value: "transmission" },
                     { label: "Radiator", value: "radiator" },
                 ],
-                motorType:"V6",
-                mileage: "147,165",
-            }
+            },
         }),
         position: { x: 100, y: 175 + 25 },
     },
-];
-
+].map(item => ({
+    ...item,
+    body: JSON.stringify(
+        JSON.parse(item.noteData).vehicleInfo.YEAR + " " +
+        JSON.parse(item.noteData).vehicleInfo.MAKE + " " +
+        JSON.parse(item.noteData).vehicleInfo.MODEL
+    )
+}));

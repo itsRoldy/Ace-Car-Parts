@@ -11,11 +11,24 @@ const NotesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredNotes, setFilteredNotes] = useState(initialNotes);
   const [isPanningDisabled, setIsPanningDisabled] = useState(false);
-  const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 } });
+  const defaultTransform = {scale: 1, translation: {x: 0, y: 0 } }
+  //const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 } });
+  const [transform, setTransform] = useState(defaultTransform)
   const [activeContextMenu, setActiveContextMenu] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
   const [infoPopup, setInfoPopup] = useState(null)
+    
 
+  const PAN_LIMITS = {
+    minX: 2000,
+    maxX: 0,
+    minY: 2000,
+    maxY: 0,
+  }
+
+  const handleResetView = () => {
+    setTransform(defaultTransform)
+  }
 
   const handlePanningStateChange = (state) => {
     setIsPanningDisabled(state);
@@ -47,18 +60,46 @@ const NotesPage = () => {
     setFilteredNotes(sortedNotes);
   };
 
+
   const handleSearchChange = (e) => {
-    const query = e.target.value.toLowerCase();
+    const query = e.target.value.toUpperCase();
     setSearchQuery(query);
-    setFilteredNotes(notes.filter((note) => JSON.parse(note.body).toLowerCase().includes(query)));
+    
+    const filtered = notes.filter((note) => {
+      try {
+        return JSON.parse(note.body).toUpperCase().includes(query);
+      } catch {
+        return note.body.toUpperCase().includes(query);
+      }
+    });
+
+    setFilteredNotes(filtered);
   };
-  
+
 
   return (
     <div
       onContextMenu={(e) => e.preventDefault()}
       style={{ width: "100vw", height: "100vh", position: "relative" }}
     >
+      <button
+        onClick={handleResetView}
+        style={{
+          position: "absolute",
+          top: "10px",
+          left: "10px",
+          padding: "8px 12px",
+          backgroundColor: "#007BFF",
+          color: "#FFFFFF",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+          zIndex: 1000,
+        }}
+      >
+        Reset View
+      </button>
+      
       <input
         type="text"
         placeholder="Search notes..."
@@ -79,19 +120,18 @@ const NotesPage = () => {
       />
       <MapInteractionCSS
         draggable={!isPanningDisabled}
+        minScale={0.5}
+        maxScale={1.5}
         value={transform}
         onChange={(newTransform) => {
           if (!isPanningDisabled) {
-            setTransform(newTransform);
-
-            // if (contextMenu) {
-            //   setContextMenu((prev) => ({
-            //     ...prev,
-            //     x: contextMenu.x,// + (newTransform.translation.x - transform.translation.x),
-            //     y: contextMenu.y,// + (newTransform.translation.y - transform.translation.y),
-            //     //note: prev.note,
-            //   }))
-            // }
+            setTransform({
+              scale: newTransform.scale,
+              translation: {
+                x: Math.max(-PAN_LIMITS.minX, Math.min(PAN_LIMITS.maxX, newTransform.translation.x)),
+                y: Math.max(-PAN_LIMITS.minY, Math.min(PAN_LIMITS.maxY, newTransform.translation.y)),
+              }
+            })
           }
         }}
       >
@@ -109,7 +149,7 @@ const NotesPage = () => {
             backgroundSize: `${gridSize}px ${gridSize}px`,
           }}
         />
-        {notes.map((note) => (
+        {filteredNotes.map((note) => (
           <NoteCard
             key={note.$id}
             note={note}

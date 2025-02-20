@@ -1,1 +1,2 @@
 Panning should not close an already opened context menu
+partsUnavail does not open when clicked on

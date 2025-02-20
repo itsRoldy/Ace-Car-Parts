@@ -128,8 +128,11 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
         note: { title: JSON.parse(note.body) },
         info: {
           VIN: vehicleInfo.VIN || "N/A",
-          motorType: vehicleInfo.motorType || "Unknown",
-          mileage: vehicleInfo.mileage || "N/A",
+          MOTOR: vehicleInfo.MOTOR || "Unknown",
+          TRANS: vehicleInfo.TRANS || "Unkown",
+          MILEAGE: vehicleInfo.MILEAGE || "N/A",
+          DRIVETYPE: vehicleInfo.DRIVETYPE || "N/A",
+          EXTCOLOR: vehicleInfo.EXTCOLOR || "N/A",
           partsUnavail: vehicleInfo.partsUnavail || [],
         },
       });
@@ -285,8 +288,11 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
         >
           <h3>{infoPopup.note.title}</h3>
           <p><strong>VIN:</strong> {infoPopup.info.VIN}</p>
-          <p><strong>Motor Type:</strong> {infoPopup.info.motorType}</p>
-          <p><strong>Mileage:</strong> {infoPopup.info.mileage}</p>
+          <p><strong>Motor Type:</strong> {infoPopup.info.MOTOR}</p>
+          <p><strong>Tranmission:</strong> {infoPopup.info.TRANS}</p>
+          <p><strong>Mileage:</strong> {infoPopup.info.MILEAGE}</p>
+          <p><strong>Drive Type:</strong> {infoPopup.info.DRIVETYPE}</p>
+          <p><strong>Exterior Color:</strong> {infoPopup.info.EXTCOLOR}</p>
 
           <div>
             <strong>Parts Unavailable:</strong>
