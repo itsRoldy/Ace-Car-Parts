@@ -18,6 +18,7 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
   const [isDragging, setIsDragging] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const infoIconRef = useRef(null)
+  const dropdownRef = useRef(null)
 
   let mouseStartPos = { x: 0, y: 0 };
 
@@ -154,6 +155,25 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
     }, 100)
   };
 
+  const handleDropdownToggle = (e) => {
+    e.stopPropagation(); // Prevents event bubbling
+    setDropdownOpen(!dropdownOpen);
+  };
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
 
   return (
     <div
@@ -226,17 +246,16 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
           fontWeight: "bold",
           fontSize: 18,
           textAlign: "center",
-          verticalAlign: "middle",
           border: "none",
           backgroundColor: "transparent",
           resize: "none",
           cursor: "pointer",
-          width: "auto",
+          width: "80%",
           height: "auto",
           padding: 0,
           margin: 0,
           display: "block",
-          lineHeight: `${height}px`,
+          overflow: "hidden",
         }}
         defaultValue={body}
       ></textarea>
@@ -297,6 +316,7 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
           <div>
             <strong>Parts Unavailable:</strong>
             <select
+              ref={dropdownRef}
               defaultValue=""
               onClick={(e) => {
                 e.stopPropagation();

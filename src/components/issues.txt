@@ -1,2 +1,3 @@
 Panning should not close an already opened context menu
-partsUnavail does not open when clicked on
+When the background context menu is open, allow panning. When mouse button is unpressed the context menu should remain.
+Dropdown won't open when click on

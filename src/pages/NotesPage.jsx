@@ -16,6 +16,7 @@ const NotesPage = () => {
   const [transform, setTransform] = useState(defaultTransform)
   const [activeContextMenu, setActiveContextMenu] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
+  const [backgroundContextMenu, setBackgroundContextMenu] = useState(null)
   const [infoPopup, setInfoPopup] = useState(null)
     
 
@@ -24,6 +25,59 @@ const NotesPage = () => {
     maxX: 0,
     minY: 2000,
     maxY: 0,
+  }
+
+  const handleContextMenu = (e) => {
+    e.preventDefault()
+
+    // Ensure the right click is on the background and not a notecard
+    if (e.target.closest(".card")) {
+      return
+    }
+
+    setBackgroundContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      type: "background"
+    })
+  }
+
+  let startX = 0
+  let startY = 0
+  let isDragging = false
+
+  const handleMouseDown = (e) => {
+    if (e.button === 0) {
+      startX = e.clientX
+      startY = e.clientY
+      isDragging = false
+    }
+  }
+
+  const handleMouseMove = (e) => {
+    const diffX = Math.abs(e.clientX - startX)
+    const diffY = Math.abs(e.clientY - startY)
+    
+    // If the mouse moves more than a few pixels, consider it a drag
+    if (diffX > 5 || diffY > 5) {
+      isDragging = true
+    }
+  }
+
+  const handleMouseUp = (e) => {
+    if (e.button === 0 && !isDragging) [
+      setBackgroundContextMenu(null)
+    ]
+  };
+
+  // Close the menu when clicking anywhere else
+  const handleClick = (e) => {
+    //e.preventDefault()
+    if (e.button === 0) {
+      if (isPanningDisabled) {
+        setBackgroundContextMenu(null)
+      }
+    }
   }
 
   const handleResetView = () => {
@@ -79,7 +133,11 @@ const NotesPage = () => {
 
   return (
     <div
-      onContextMenu={(e) => e.preventDefault()}
+      onContextMenu={handleContextMenu}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      //onContextMenu={handleClick}
       style={{ width: "100vw", height: "100vh", position: "relative" }}
     >
       <button
@@ -149,20 +207,38 @@ const NotesPage = () => {
             backgroundSize: `${gridSize}px ${gridSize}px`,
           }}
         />
-        {filteredNotes.map((note) => (
-          <NoteCard
-            key={note.$id}
-            note={note}
-            allNotes={notes}
-            transform={transform}
-            onPositionChange={onPositionChange}
-            onPanningStateChange={handlePanningStateChange}
-            infoPopup={infoPopup}
-            setInfoPopup={setInfoPopup}
-            setContextMenu={setContextMenu}
-            contextMenu={contextMenu}
+
+        {/* Background Context Menu */}
+          {backgroundContextMenu && (
+            <ContextMenu
+            x={backgroundContextMenu.x} 
+            y={backgroundContextMenu.y} 
+              type="background"
           />
-        ))}
+        )}
+
+        {notes.map((note) => {
+          const isMatch = searchQuery === "" || filteredNotes.includes(note);
+          return (
+            <div
+              key={note.$id}
+              style={{
+                opacity: isMatch ? 1 : 0.2, // Non-matching notes become transparent
+                transition: "opacity 0.3s ease-in-out",
+              }}
+            >
+              <NoteCard
+                note={note}
+                onPositionChange={onPositionChange}
+                infoPopup={infoPopup}
+                setInfoPopup={setInfoPopup}
+                setContextMenu={setContextMenu} // Ensure this is passed
+                contextMenu={contextMenu}
+                transform={transform}
+              />
+            </div>
+          );
+        })}
       </MapInteractionCSS>
 
     </div>
