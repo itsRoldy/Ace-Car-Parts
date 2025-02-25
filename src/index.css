@@ -57,3 +57,7 @@ textarea:focus {
   height: 100%;
 }
 
+/* Debugging: Add red outline to all elements */
+/* * {
+  outline: 1px solid red !important;
+} */

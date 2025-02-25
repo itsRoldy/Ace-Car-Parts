@@ -10,7 +10,7 @@ const NotesPage = () => {
   const [notes, setNotes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredNotes, setFilteredNotes] = useState(initialNotes);
-  const [isPanningDisabled, setIsPanningDisabled] = useState(false);
+  const [isPanning, setIsPanning] = useState(true);
   const defaultTransform = {scale: 1, translation: {x: 0, y: 0 } }
   //const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 } });
   const [transform, setTransform] = useState(defaultTransform)
@@ -85,15 +85,15 @@ const NotesPage = () => {
   }
 
   const handlePanningStateChange = (state) => {
-    setIsPanningDisabled(state);
+    setIsPanning(state);
   };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Shift") setIsPanningDisabled(true);
+      if (e.key === "Shift") setIsPanning(false);
     };
     const handleKeyUp = (e) => {
-      if (e.key === "Shift") setIsPanningDisabled(false);
+      if (e.key === "Shift") setIsPanning(true);
     };
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -177,12 +177,12 @@ const NotesPage = () => {
         }}
       />
       <MapInteractionCSS
-        draggable={!isPanningDisabled}
+        draggable={isPanning}
         minScale={0.5}
         maxScale={1.5}
         value={transform}
         onChange={(newTransform) => {
-          if (!isPanningDisabled) {
+          if (isPanning) {
             setTransform({
               scale: newTransform.scale,
               translation: {
@@ -235,6 +235,8 @@ const NotesPage = () => {
                 setContextMenu={setContextMenu} // Ensure this is passed
                 contextMenu={contextMenu}
                 transform={transform}
+                onPanningStateChange={handlePanningStateChange}
+                
               />
             </div>
           );
