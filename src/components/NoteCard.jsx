@@ -5,8 +5,12 @@ import { setNewOffset, setZIndex, snapToGrid } from "../utils";
 import { GLOBAL_SIZE } from "../assets/fakeData";
 import infoIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/circle-info-solid.svg";
 import rotateIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/rotate-right-solid.svg";
-import messagesIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/message-regular.svg"
+import messagesIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/message-solid.svg"
+import deleteIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/trash-solid.svg"
+import editIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/pen-to-square-solid.svg"
+import copyIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/copy-solid.svg"
 import ContextMenu from "../components/contextMenus.jsx";
+
 
 
 export const gridSize = 25;
@@ -141,17 +145,29 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
 
   const handleInfoClick = () => {
     setInfoPopup(null)
-    
+    console.log("handleinfoclick")
     setTimeout(() => {
       openInfoPopup()      
     }, 10);
   }
 
   const handleRotate = () => {
-    setRotation((prevRotation) => prevRotation + 90)
+    setRotation((prevRotation) => (prevRotation === 0 ? 90 : 0))
+  }
+
+  const handleEdit = () => {
+
+  }
+
+  const handleCopy = () => {
+
   }
 
   const handleMessages = () => {
+
+  }
+
+  const handleDelete = () => {
 
   }
 
@@ -166,6 +182,7 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
     
     setTimeout(() => {
       const vehicleInfo = JSON.parse(note.noteData).vehicleInfo || {};
+      console.log("here now")
       setInfoPopup({
         noteId: note.$id,
         x: parseFloat(width) + 25,
@@ -230,16 +247,20 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
         border: isSelected ? "2px solid #007bff" : isHovered && !infoPopup ? "3px solid #FFD700" : "1px solid transparent",
         boxSizing: "border-box",
         transition: "border 0.3s ease, background-color 0.3s ease",
-        cursor: isHovered || isDragging ? "pointer" : "auto",
+        //cursor: isHovered || isDragging ? "pointer" : "auto",
+        cursor: "default",
         boxShadow: isHovered && !infoPopup ? "0 0 10px rgba(255, 215, 0, 0.7)" : isSelected ? "0 0 10px rgba(0, 123, 255, 0.7)" : "none",
         transform: `${isHovered && !infoPopup ? "scale(1.05)" : "scale(1)"} rotate(${rotation}deg)`,
         transformOrigin: "center",
         zIndex: isDragging ? 1000 : 10,
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        flexDirection: "column",
+        //justifyContent: "center",
+        justifyContent: "flex-start",
+        //alignItems: "center",
         //position: "relative",
-        position:"absolute",
+        position: "absolute",
+        overflow: "hidden",
       }}
 
       onMouseEnter={() => {
@@ -263,77 +284,168 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
       onContextMenu={(e) => {
         const infoPopupElement = document.querySelector(".info-popup")
 
-        if (infoPopupElement && !infoPopupElement.contains(e.targtet)) {
+        if (infoPopupElement && !infoPopupElement.contains(e.target)) {
           setInfoPopup(null)
         }
         handleContextMenu(e, note)
       }}
 
     >
+      <div
+        className="card-header"
+        style={{
+          backgroundColor: noteData.colorBody,
+          filter: "brightness(80%)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          height: "30%",
+          position: "relative",
+        }}
+      >
 
-    <img
-      src={messagesIcon}
-        alt="ReadMessages"
-      style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        cursor: "pointer",
-        width: 20,
-        height: 20,
-      }}
-      onClick={handleMessages}
-    />
+      <img
+        src={rotateIcon}
+          alt="Rotate"
+          style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          cursor: "pointer",
+          width: 20,
+          height: 20,
+          transition: "transform 0.2s ease-in-out",
+          transformOrigin: "center",
+          zIndex: 10,
+        }}
+        onClick={handleRotate}
+        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      />
 
-    <img
-      src={rotateIcon}
-        alt="Rotate"
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        cursor: "pointer",
-        width: 20,
-        height: 20,
-      }}
-      onClick={handleRotate}
-    />
+      <img
+        src={editIcon}
+          alt="Edit"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 30,
+          cursor: "pointer",
+          width: 20,
+          height: 20,
+          transition: "transform 0.2s ease-in-out",
+          transformOrigin: "center",
+          zIndex: 10,
+        }}
+        onClick={handleEdit}
+        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        />     
+
+      <img
+        src={copyIcon}
+          alt="Copy"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 60,
+          cursor: "pointer",
+          width: 20,
+          height: 20,
+          transition: "transform 0.2s ease-in-out",
+          transformOrigin: "center",
+          zIndex: 10,
+        }}
+        onClick={handleCopy}
+        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      />
+               
+      <img
+        src={deleteIcon}
+          alt="Delete"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 90,
+          cursor: "pointer",
+          width: 20,
+          height: 20,
+          transition: "transform 0.2s ease-in-out",
+          transformOrigin: "center",
+          zIndex: 10,
+        }}
+        onClick={handleDelete}
+        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      />
       
-    <img
-      ref={infoIconRef}
-      src={infoIcon}
-      alt="Info"
-      style={{
-        position: "absolute",
-        top: 0,
-        right: 0,
-        cursor: "pointer",
-        width: 20,
-        height: 20
-      }}
-      onClick={handleInfoClick}
-    />
+      <img
+        src={messagesIcon}
+          alt="ReadMessages"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 150,
+          cursor: "pointer",
+          width: 20,
+          height: 20,
+          transition: "transform 0.2s ease-in-out",
+          transformOrigin: "center",
+          zIndex: 10,
+        }}
+        onClick={handleMessages}
+        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+      />
+
+        <img
+          src={infoIcon}
+            alt="Info"
+          ref={infoIconRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            cursor: "pointer",
+            width: 20,
+            height: 20,
+            transition: "transform 0.2s ease-in-out",
+            transformOrigin: "center",
+            zIndex: 10,
+          }}
+          onClick={handleInfoClick}
+          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        />
       
-    <textarea
-      style={{
-        //pointerEvents: "none",
-        color: noteData.colorText,
-        fontWeight: "bold",
-        fontSize: 18,
-        textAlign: "center",
-        border: "none",
-        backgroundColor: "transparent",
-        resize: "none",
-        cursor: "pointer",
-        width: "80%",
-        height: "auto",
-        padding: 0,
-        margin: 0,
-        display: "block",
-        //overflow: "hidden",
-      }}
-      defaultValue={body}
-    ></textarea>
+      </div>
+      
+      <textarea
+        style={{
+          position: "absolute",
+          top: "65%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          color: noteData.colorText,
+          fontWeight: "bold",
+          fontSize: 18,
+          textAlign: "center",
+          border: "none",
+          backgroundColor: "transparent",
+          resize: "none",
+          cursor: "pointer",
+          width: "80%",
+          height: "60%",
+          padding: "0px",
+          overflow: "hidden",
+          boxSizing: "border-box",
+          zIndex: 1,
+        }}
+          defaultValue={body}
+        ></textarea>      
+      
 
     {contextMenu && contextMenu.note.$id === note.$id && (
       ReactDOM.createPortal(

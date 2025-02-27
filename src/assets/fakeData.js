@@ -1,5 +1,6 @@
 
-export const GLOBAL_SIZE = JSON.stringify({width: "200px", height: "50px", padding: "0px"});
+export const GLOBAL_SIZE = JSON.stringify({ width: "200px", height: "75px", padding: "0px" });
+
 
 export const fakeData = [
     {
@@ -56,7 +57,7 @@ export const fakeData = [
                 ],
             },
         }),
-        position: { x: 100, y: 100 + 25 },
+        position: { x: 100, y: 100 + 50 },
     },
     {
         $id: 3,
@@ -83,7 +84,7 @@ export const fakeData = [
                 ],
             },
         }),
-        position: { x: 100, y: 175 + 25 },
+        position: { x: 100, y: 175 + 75 },
     },
 ].map(item => ({
     ...item,

@@ -1,4 +1,5 @@
 Panning should not close an already opened context menu
 When the background context menu is open, allow panning. When mouse button is unpressed the context menu should remain.
 Dropdown won't open when clicked on
-The infoPopup should be right side up always not matter the rotation of the note
+When card is rotated vertically, the card snapping is not to the nearest gridline
+Infopopup does not open
