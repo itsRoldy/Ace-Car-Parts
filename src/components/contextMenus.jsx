@@ -51,14 +51,14 @@ const ContextMenu = ({ x, y, type, onOptionSelect, noteLabel }) => {
 
   const handleOptionClick = (e, action) => {
     e.stopPropagation()
-    console.log('context menu option clicked', action)
+    //console.log('context menu option clicked', action)
 
     setTimeout(() => {
 
       if (typeof onOptionSelect === "function") {
         onOptionSelect(action)
       } else {
-        console.error("onOptionSelect is not a function!", onOptionSelect)
+        //console.error("onOptionSelect is not a function!", onOptionSelect)
       }
 
   }, 50);
@@ -84,7 +84,7 @@ const ContextMenu = ({ x, y, type, onOptionSelect, noteLabel }) => {
           onClick={(e) => {
             e.stopPropagation()
             handleOptionClick(e, option.action);
-            console.log('context menu clicked', e.target)
+            //console.log('context menu clicked', e.target)
           }}
         >
           {option.label}

@@ -11,8 +11,6 @@ import editIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons
 import copyIcon from "K:/Projects/Coding Projects/Ace Car Parts/src/assets/icons/copy-solid.svg"
 import ContextMenu from "../components/contextMenus.jsx";
 
-
-
 export const gridSize = 25;
 
 const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSelected, infoPopup, setInfoPopup, setContextMenu, contextMenu, transform, }) => {
@@ -23,7 +21,7 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
   const cardRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const infoIconRef = useRef(null)
   const dropdownRef = useRef(null)
   const [rotation, setRotation] = useState(0)
@@ -33,7 +31,6 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      console.log(isDragging)
       if (contextMenu && !isDragging) {
         const menuElement = document.getElementById("context-menu");
   
@@ -71,7 +68,6 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
   
 
   const handleContextMenu = (e, note) => {
-    console.log("context menu set")
     e.preventDefault();
 
     // Prefent right clicking inside the existing context menu
@@ -88,21 +84,6 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
       note,
     });
   }
-
-  // const handleMouseMove = (e) => {
-  //   setIsDragging(true)
-    
-  //   const mouseMoveDir = {
-  //     x: mouseStartPos.x - e.clientX,
-  //     y: mouseStartPos.y - e.clientY,
-  //   };
-
-  //   mouseStartPos.x = e.clientX;
-  //   mouseStartPos.y = e.clientY;
-  //   const newPosition = setNewOffset(cardRef.current, mouseMoveDir, padding);
-  //   setPosition(newPosition);
-  //   onPositionChange({ ...note, position: newPosition });
-  // };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -143,12 +124,30 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
     onPanningStateChange(false);
   };
 
+
+
+  const handleWheel = (e) => {
+    if (isDropdownOpen && dropdownRef.current && dropdownRef.current.contains(e.target)) {
+      e.preventDefault(); // Disable zoom
+      dropdownRef.current.scrollTop += e.deltaY; // Enable smooth scrolling
+    }
+  };
+  
+  useEffect(() => {
+    if (isDropdownOpen) {
+      document.addEventListener("wheel", handleWheel, { passive: false });
+    } else {
+      document.removeEventListener("wheel", handleWheel);
+    }
+
+    return () => {
+      document.removeEventListener("wheel", handleWheel);
+    };
+  }, [isDropdownOpen]);
+
+
   const handleInfoClick = () => {
-    setInfoPopup(null)
-    console.log("handleinfoclick")
-    setTimeout(() => {
-      openInfoPopup()      
-    }, 10);
+    openInfoPopup()      
   }
 
   const handleRotate = () => {
@@ -156,72 +155,65 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
   }
 
   const handleEdit = () => {
-
   }
 
   const handleCopy = () => {
-
   }
 
   const handleMessages = () => {
-
   }
 
   const handleDelete = () => {
-
   }
 
+  const handleDropDownClick = () => {
+    //setIsDropdownOpen((prev) => !prev)
+    setIsDropdownOpen(!isDropdownOpen)
+  }
+
+  useEffect(() => {
+    if (!infoPopup) {
+      setIsDropdownOpen(false)
+    }
+  }, [infoPopup])
+
+
   const openInfoPopup = () => {
-    console.log('info popup opened')
-
     setTimeout(() => {
-      setContextMenu(null)
-    }, 50);
-
-    setInfoPopup(null)    
-    
-    setTimeout(() => {
-      const vehicleInfo = JSON.parse(note.noteData).vehicleInfo || {};
-      console.log("here now")
-      setInfoPopup({
-        noteId: note.$id,
-        x: parseFloat(width) + 25,
-        y: 0,
-        note: { title: JSON.parse(note.body) },
-        info: {
-          VIN: vehicleInfo.VIN || "N/A",
-          MOTOR: vehicleInfo.MOTOR || "Unknown",
-          TRANS: vehicleInfo.TRANS || "Unkown",
-          MILEAGE: vehicleInfo.MILEAGE || "N/A",
-          DRIVETYPE: vehicleInfo.DRIVETYPE || "N/A",
-          EXTCOLOR: vehicleInfo.EXTCOLOR || "N/A",
-          partsUnavail: vehicleInfo.partsUnavail || [],
-        },
-      });
-
-      setContextMenu(null)
-    }, 10);
+      if (!note || !note.noteData) return
+        const vehicleInfo = JSON.parse(note.noteData).vehicleInfo || {};
+        setInfoPopup({
+          noteId: note.$id,
+          x: parseFloat(width) + 25,
+          y: 0,
+          note: { title: JSON.parse(note.body) },
+          info: {
+            VIN: vehicleInfo.VIN || "N/A",
+            MOTOR: vehicleInfo.MOTOR || "Unknown",
+            TRANS: vehicleInfo.TRANS || "Unkown",
+            MILEAGE: vehicleInfo.MILEAGE || "N/A",
+            DRIVETYPE: vehicleInfo.DRIVETYPE || "N/A",
+            EXTCOLOR: vehicleInfo.EXTCOLOR || "N/A",
+            partsUnavail: vehicleInfo.partsUnavail || [],
+          },
+        });
+    }, 10);    
   };
 
   const handleOptionSelect = (action) => {
-    console.log('option selected', action)
-
     if (action === "getInfo") {
-      console.log('clicked info')
       openInfoPopup()
     }
-
     setTimeout(() => {
       setContextMenu(null)
-    }, 100)
+    }, 10)
   };
 
-  
   //Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdownOpen(false);
+        setIsDropdownOpen(false)
       }
     };
   
@@ -230,9 +222,6 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  
-
 
   return (
     <div
@@ -244,34 +233,33 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
         height: height,
         left: position.x,
         top: position.y,
-        border: isSelected ? "2px solid #007bff" : isHovered && !infoPopup ? "3px solid #FFD700" : "1px solid transparent",
+        //border: isSelected ? "2px solid #007bff" : (isHovered && infoPopup?.noteId === note.$id) ? "3px solid #FFD700" : "1px solid transparent",
+        border: isSelected || isHovered ? "3px solid #FFD700" : "1px solid transparent",
         boxSizing: "border-box",
         transition: "border 0.3s ease, background-color 0.3s ease",
         //cursor: isHovered || isDragging ? "pointer" : "auto",
         cursor: "default",
-        boxShadow: isHovered && !infoPopup ? "0 0 10px rgba(255, 215, 0, 0.7)" : isSelected ? "0 0 10px rgba(0, 123, 255, 0.7)" : "none",
+        //boxShadow: isHovered && !infoPopup ? "0 0 10px rgba(255, 215, 0, 0.7)" : isSelected ? "0 0 10px rgba(0, 123, 255, 0.7)" : "none",
+        boxShadow: isHovered ? "0 0 10px rgba(255, 215, 0, 0.7)" : isSelected ? "0 0 10px rgba(0, 123, 255, 0.7)" : "none",
         transform: `${isHovered && !infoPopup ? "scale(1.05)" : "scale(1)"} rotate(${rotation}deg)`,
         transformOrigin: "center",
         zIndex: isDragging ? 1000 : 10,
         display: "flex",
         flexDirection: "column",
-        //justifyContent: "center",
         justifyContent: "flex-start",
-        //alignItems: "center",
-        //position: "relative",
         position: "absolute",
-        overflow: "hidden",
       }}
 
       onMouseEnter={() => {
-        if (!infoPopup) {
+        //if (!infoPopup) {
           setIsHovered(true);
-        }
+        //}
       }}
+
       onMouseLeave={() => {
-        if (!infoPopup) {
+        //if (!infoPopup) {
           setIsHovered(false);
-        }
+        //}
       }}
 
       onMouseDown={(e) => {
@@ -283,7 +271,6 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
 
       onContextMenu={(e) => {
         const infoPopupElement = document.querySelector(".info-popup")
-
         if (infoPopupElement && !infoPopupElement.contains(e.target)) {
           setInfoPopup(null)
         }
@@ -467,7 +454,7 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
       )
     )}
 
-    {infoPopup && infoPopup.noteId == note.$id && (
+      {infoPopup && infoPopup.noteId == note.$id && (
       <div
         className="info-popup"
         style={{
@@ -479,18 +466,16 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
           color: "#FFFFFF",
           border: "1px solid #444",
           borderRadius: "5px",
-          zIndex: 1001,
+          zIndex: 9999,
           display: "inline-block",
           maxWidth: "400px",
           minWidth: "200px",
           wordWrap: "break-word",
           cursor: "pointer",
           overflow: "visible",
+          opacity: 1,
+          visibility: "visible",
         }}
-        // onContextMenu={(e) => {
-        //   e.preventDefault()
-        //   //e.stopPropagation()
-        // }}
       >
         <h3>{infoPopup.note.title}</h3>
         <p><strong>VIN:</strong> {infoPopup.info.VIN}</p>
@@ -503,28 +488,34 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
         
         <div>
           <strong>Parts Unavailable:</strong>
-          <div style={{ position: "relative "}}>
+            <div
+              style={{ position: "relative " }}>
             <select
-              ref={dropdownRef}
-              defaultValue=""
-              onFocus={() => setDropdownOpen(true)}
-              onBlur={() => setDropdownOpen(false)}
-              size={dropdownOpen ? infoPopup?.info?.partsUnavail?.length || 5 : 1}
-              style={{
-                //position: "relative",
-                width: "100%",
-                fontSize: "14px",
-                backgroundColor: "#222",
-                color: "#FFF",
-                border: "1px solide #444",
-                borderRadius: "4px",
-                cursor: "pointer",
-                //appearance: "none",
-                WebkitAppearance: "none",
-                MozAppearance: "none",
-                zIndex: 9999,
-                overflowY: "auto",
-              }}
+                ref={dropdownRef}
+                defaultValue=""
+                onClick={handleDropDownClick}
+                size={isDropdownOpen ? Math.max(3, infoPopup?.info?.partsUnavail?.length) || 5 : 1}
+                style={{
+                  width: "100%",
+                  fontSize: "14px",
+                  backgroundColor: "#222",
+                  color: "#FFF",
+                  border: "1px solide #444",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  WebkitAppearance: "none",
+                  MozAppearance: "none",
+                  zIndex: 9999,
+                  overflowY: "auto",
+                  maxHeight: "150px",
+                }}
+                onWheel={(e) => {
+                  if (isDropdownOpen) {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    dropdownRef.current.scrollTop += e.deltaY
+                  }
+                }}
             >
               <option value="" disabled>Click to view</option>
               {infoPopup.info.partsUnavail.map((part, index) => (

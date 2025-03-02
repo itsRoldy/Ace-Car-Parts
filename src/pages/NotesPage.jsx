@@ -236,7 +236,6 @@ const NotesPage = () => {
                 contextMenu={contextMenu}
                 transform={transform}
                 onPanningStateChange={handlePanningStateChange}
-                
               />
             </div>
           );
