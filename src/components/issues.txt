@@ -3,3 +3,10 @@ When the background context menu is open, allow panning. When mouse button is un
 When card is rotated vertically, the card snapping is not to the nearest gridline
 Can't scroll through the drop down list using the mouse wheel
 When drop down list is open, the mouse wheel still zooms when it shouldn't
+
+
+
+
+
+ADDITIONS:
+1. Admin should be able to add and delete parts in unavailable parts drop down

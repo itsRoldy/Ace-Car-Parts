@@ -13,7 +13,7 @@ import ContextMenu from "../components/contextMenus.jsx";
 
 export const gridSize = 25;
 
-const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSelected, infoPopup, setInfoPopup, setContextMenu, contextMenu, transform, }) => {
+const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSelected, infoPopup, setInfoPopup, setContextMenu, contextMenu, transform, onDelete, onCopy}) => {
   const body = JSON.parse(note.body);
   const [position, setPosition] = useState(note.position || { x: 0, y: 0 });
   const noteData = note.noteData ? JSON.parse(note.noteData) : [];
@@ -157,13 +157,15 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
   const handleEdit = () => {
   }
 
-  const handleCopy = () => {
-  }
-
   const handleMessages = () => {
   }
 
   const handleDelete = () => {
+    onDelete(note.$id);
+  }
+
+  const handleCopy = () => {
+    onCopy(note);
   }
 
   const handleDropDownClick = () => {
@@ -343,10 +345,10 @@ const NoteCard = ({ note, allNotes, onPositionChange, onPanningStateChange, isSe
           transition: "transform 0.2s ease-in-out",
           transformOrigin: "center",
           zIndex: 10,
-        }}
-        onClick={handleCopy}
-        onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
-        onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          }}
+          onClick={handleCopy}
+          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.2)")}
+          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
       />
                
       <img

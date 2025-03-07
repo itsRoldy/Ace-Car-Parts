@@ -18,6 +18,7 @@ const NotesPage = () => {
   const [contextMenu, setContextMenu] = useState(null);
   const [backgroundContextMenu, setBackgroundContextMenu] = useState(null)
   const [infoPopup, setInfoPopup] = useState(null)
+  const { width, heigth, padding } = JSON.parse(GLOBAL_SIZE); 
     
 
   const PAN_LIMITS = {
@@ -130,6 +131,31 @@ const NotesPage = () => {
     setFilteredNotes(filtered);
   };
 
+  const handleDeleteNote = (id) => {
+    console.log("Deleting note with id: ", id);
+    setNotes(notes.filter((note) => note.$id !== id));
+    setFilteredNotes(filteredNotes.filter((note) => note.$id !== id));
+  };
+
+  const handleCopyNote = (note) => {
+    const newId = `note-${Date.now()}`
+    const orginalBody = JSON.parse(note.body)
+    const copiedBody = JSON.stringify(`${orginalBody} (Copy)`)
+
+    const newNote = {
+      ...note,
+      body: copiedBody,
+      $id: newId,
+      position: {
+        x: note.position.x + parseInt(width,10) + 25,
+        y: note.position.y,
+      },
+    }
+
+    setNotes((prevNotes) => [...prevNotes, newNote])
+    setFilteredNotes((prevNotes) => [...prevNotes, newNote])
+  }
+
 
   return (
     <div
@@ -232,10 +258,12 @@ const NotesPage = () => {
                 onPositionChange={onPositionChange}
                 infoPopup={infoPopup}
                 setInfoPopup={setInfoPopup}
-                setContextMenu={setContextMenu} // Ensure this is passed
+                setContextMenu={setContextMenu}
                 contextMenu={contextMenu}
                 transform={transform}
                 onPanningStateChange={handlePanningStateChange}
+                onDelete={handleDeleteNote}
+                onCopy={handleCopyNote}
               />
             </div>
           );

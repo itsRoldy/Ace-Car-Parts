@@ -6,7 +6,7 @@ export const fakeData = [
     {
         $id: 1,
         noteData: JSON.stringify({
-            id: "color-purple",
+            id: "7J3ZZ56T7834500003",
             width: GLOBAL_SIZE.width,
             height: GLOBAL_SIZE.height,
             colorHeader: "#FED0FD",
@@ -35,7 +35,7 @@ export const fakeData = [
     {
         $id: 2,
         noteData: JSON.stringify({
-            id: "color-blue",
+            id: "1HK503JB9P5523729",
             width: GLOBAL_SIZE.width,
             height: GLOBAL_SIZE.height,
             colorHeader: "#9BD1DE",
@@ -62,7 +62,7 @@ export const fakeData = [
     {
         $id: 3,
         noteData: JSON.stringify({
-            id: "color-yellow",
+            id: "YG37025R495800501",
             width: GLOBAL_SIZE.width,
             height: GLOBAL_SIZE.height,
             colorHeader: "#FFEFBE",
