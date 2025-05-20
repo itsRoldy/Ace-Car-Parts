@@ -10,91 +10,23 @@ const NotesPage = () => {
   const [notes, setNotes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredNotes, setFilteredNotes] = useState(initialNotes);
-  const [isPanning, setIsPanning] = useState(true);
-  const defaultTransform = {scale: 1, translation: {x: 0, y: 0 } }
-  //const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 } });
-  const [transform, setTransform] = useState(defaultTransform)
+  const [isPanningDisabled, setIsPanningDisabled] = useState(false);
+  const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 } });
   const [activeContextMenu, setActiveContextMenu] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
-  const [backgroundContextMenu, setBackgroundContextMenu] = useState(null)
   const [infoPopup, setInfoPopup] = useState(null)
-  const { width, heigth, padding } = JSON.parse(GLOBAL_SIZE); 
-    
 
-  const PAN_LIMITS = {
-    minX: 2000,
-    maxX: 0,
-    minY: 2000,
-    maxY: 0,
-  }
-
-  const handleContextMenu = (e) => {
-    e.preventDefault()
-
-    // Ensure the right click is on the background and not a notecard
-    if (e.target.closest(".card")) {
-      return
-    }
-
-    setBackgroundContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      type: "background"
-    })
-  }
-
-  let startX = 0
-  let startY = 0
-  let isDragging = false
-
-  const handleMouseDown = (e) => {
-    if (e.button === 0) {
-      startX = e.clientX
-      startY = e.clientY
-      isDragging = false
-    }
-  }
-
-  const handleMouseMove = (e) => {
-    const diffX = Math.abs(e.clientX - startX)
-    const diffY = Math.abs(e.clientY - startY)
-    
-    // If the mouse moves more than a few pixels, consider it a drag
-    if (diffX > 5 || diffY > 5) {
-      isDragging = true
-    }
-  }
-
-  const handleMouseUp = (e) => {
-    if (e.button === 0 && !isDragging) [
-      setBackgroundContextMenu(null)
-    ]
-  };
-
-  // Close the menu when clicking anywhere else
-  const handleClick = (e) => {
-    //e.preventDefault()
-    if (e.button === 0) {
-      if (isPanningDisabled) {
-        setBackgroundContextMenu(null)
-      }
-    }
-  }
-
-  const handleResetView = () => {
-    setTransform(defaultTransform)
-  }
 
   const handlePanningStateChange = (state) => {
-    setIsPanning(state);
+    setIsPanningDisabled(state);
   };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Shift") setIsPanning(false);
+      if (e.key === "Shift") setIsPanningDisabled(true);
     };
     const handleKeyUp = (e) => {
-      if (e.key === "Shift") setIsPanning(true);
+      if (e.key === "Shift") setIsPanningDisabled(false);
     };
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -115,75 +47,18 @@ const NotesPage = () => {
     setFilteredNotes(sortedNotes);
   };
 
-
   const handleSearchChange = (e) => {
-    const query = e.target.value.toUpperCase();
+    const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-    
-    const filtered = notes.filter((note) => {
-      try {
-        return JSON.parse(note.body).toUpperCase().includes(query);
-      } catch {
-        return note.body.toUpperCase().includes(query);
-      }
-    });
-
-    setFilteredNotes(filtered);
+    setFilteredNotes(notes.filter((note) => JSON.parse(note.body).toLowerCase().includes(query)));
   };
-
-  const handleDeleteNote = (id) => {
-    console.log("Deleting note with id: ", id);
-    setNotes(notes.filter((note) => note.$id !== id));
-    setFilteredNotes(filteredNotes.filter((note) => note.$id !== id));
-  };
-
-  const handleCopyNote = (note) => {
-    const newId = `note-${Date.now()}`
-    const orginalBody = JSON.parse(note.body)
-    const copiedBody = JSON.stringify(`${orginalBody} (Copy)`)
-
-    const newNote = {
-      ...note,
-      body: copiedBody,
-      $id: newId,
-      position: {
-        x: note.position.x + parseInt(width,10) + 25,
-        y: note.position.y,
-      },
-    }
-
-    setNotes((prevNotes) => [...prevNotes, newNote])
-    setFilteredNotes((prevNotes) => [...prevNotes, newNote])
-  }
-
+  
 
   return (
     <div
-      onContextMenu={handleContextMenu}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      //onContextMenu={handleClick}
+      onContextMenu={(e) => e.preventDefault()}
       style={{ width: "100vw", height: "100vh", position: "relative" }}
     >
-      <button
-        onClick={handleResetView}
-        style={{
-          position: "absolute",
-          top: "10px",
-          left: "10px",
-          padding: "8px 12px",
-          backgroundColor: "#007BFF",
-          color: "#FFFFFF",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-          zIndex: 1000,
-        }}
-      >
-        Reset View
-      </button>
-      
       <input
         type="text"
         placeholder="Search notes..."
@@ -203,19 +78,20 @@ const NotesPage = () => {
         }}
       />
       <MapInteractionCSS
-        draggable={isPanning}
-        minScale={0.5}
-        maxScale={1.5}
+        draggable={!isPanningDisabled}
         value={transform}
         onChange={(newTransform) => {
-          if (isPanning) {
-            setTransform({
-              scale: newTransform.scale,
-              translation: {
-                x: Math.max(-PAN_LIMITS.minX, Math.min(PAN_LIMITS.maxX, newTransform.translation.x)),
-                y: Math.max(-PAN_LIMITS.minY, Math.min(PAN_LIMITS.maxY, newTransform.translation.y)),
-              }
-            })
+          if (!isPanningDisabled) {
+            setTransform(newTransform);
+
+            if (contextMenu) {
+              setContextMenu((prev) => ({
+                ...prev,
+                x: contextMenu.x,// + (newTransform.translation.x - transform.translation.x),
+                y: contextMenu.y,// + (newTransform.translation.y - transform.translation.y),
+                //note: prev.note,
+              }))
+            }
           }
         }}
       >
@@ -233,41 +109,20 @@ const NotesPage = () => {
             backgroundSize: `${gridSize}px ${gridSize}px`,
           }}
         />
-
-        {/* Background Context Menu */}
-          {backgroundContextMenu && (
-            <ContextMenu
-            x={backgroundContextMenu.x} 
-            y={backgroundContextMenu.y} 
-              type="background"
+        {notes.map((note) => (
+          <NoteCard
+            key={note.$id}
+            note={note}
+            allNotes={notes}
+            transform={transform}
+            onPositionChange={onPositionChange}
+            onPanningStateChange={handlePanningStateChange}
+            infoPopup={infoPopup}
+            setInfoPopup={setInfoPopup}
+            setContextMenu={setContextMenu}
+            contextMenu={contextMenu}
           />
-        )}
-
-        {notes.map((note) => {
-          const isMatch = searchQuery === "" || filteredNotes.includes(note);
-          return (
-            <div
-              key={note.$id}
-              style={{
-                opacity: isMatch ? 1 : 0.2, // Non-matching notes become transparent
-                transition: "opacity 0.3s ease-in-out",
-              }}
-            >
-              <NoteCard
-                note={note}
-                onPositionChange={onPositionChange}
-                infoPopup={infoPopup}
-                setInfoPopup={setInfoPopup}
-                setContextMenu={setContextMenu}
-                contextMenu={contextMenu}
-                transform={transform}
-                onPanningStateChange={handlePanningStateChange}
-                onDelete={handleDeleteNote}
-                onCopy={handleCopyNote}
-              />
-            </div>
-          );
-        })}
+        ))}
       </MapInteractionCSS>
 
     </div>
