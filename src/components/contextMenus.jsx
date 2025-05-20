@@ -9,7 +9,7 @@ const menuStyle = {
   color: "#FFFFFF",
   borderRadius: "5px",
   boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.2)",
-  //padding: "5px 0",
+  padding: "5px 0",
   whiteSpace: "nowrap",
   zIndex: 1000,
   pointerEvents: "auto",
@@ -69,7 +69,7 @@ const ContextMenu = ({ x, y, type, onOptionSelect, noteLabel }) => {
   return (
     <div
       id="context-menu"
-      style={{ ...menuStyle, top: '0px', left: '0px' }}>
+      style={{ ...menuStyle, top: y, left: x }}>
       {type === "note" && (
         <div style={{ ...menuItemStyle, fontWeight: "bold" }}>
           {noteLabel}
@@ -96,6 +96,7 @@ const ContextMenu = ({ x, y, type, onOptionSelect, noteLabel }) => {
 };
 
 export default ContextMenu;
+
 
 
 
