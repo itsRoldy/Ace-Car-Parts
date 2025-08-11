@@ -69,7 +69,8 @@ const ContextMenu = ({ x, y, type, onOptionSelect, noteLabel }) => {
   return (
     <div
       id="context-menu"
-      style={{ ...menuStyle, top: y, left: x }}>
+      style={{ ...menuStyle, top: `${y}px`, left: `${x}px` }}>
+      {/* style={{ ...menuStyle, top: `${y}px`, left: `${x}px` }}> */}
       {type === "note" && (
         <div style={{ ...menuItemStyle, fontWeight: "bold" }}>
           {noteLabel}

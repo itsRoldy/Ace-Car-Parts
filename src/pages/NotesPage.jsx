@@ -1,8 +1,8 @@
 
-
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { GLOBAL_SIZE, fakeData as initialNotes } from "../assets/fakeData.js";
-import NoteCard, { gridSize } from "../components/NoteCard.jsx";
+import NoteCard, {InfoPopup, gridSize } from "../components/NoteCard.jsx";
 import { MapInteractionCSS } from "react-map-interaction";
 import ContextMenu from "../components/contextMenus.jsx";
 
@@ -12,14 +12,21 @@ const NotesPage = () => {
   const [filteredNotes, setFilteredNotes] = useState(initialNotes);
   const [isPanningDisabled, setIsPanningDisabled] = useState(false);
   const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 } });
-  const [activeContextMenu, setActiveContextMenu] = useState(null);
+  const [infoPopup, setInfoPopup] = useState(null);
   const [contextMenu, setContextMenu] = useState(null);
-  const [infoPopup, setInfoPopup] = useState(null)
-
 
   const handlePanningStateChange = (state) => {
     setIsPanningDisabled(state);
   };
+
+  // Close context menu on outside click
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    if (contextMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [contextMenu]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -41,7 +48,9 @@ const NotesPage = () => {
   };
 
   const onPositionChange = (updatedNote) => {
-    const updatedNotes = notes.map((note) => (note.$id === updatedNote.$id ? updatedNote : note));
+    const updatedNotes = notes.map((note) =>
+      note.$id === updatedNote.$id ? updatedNote : note
+    );
     const sortedNotes = sortNotes(updatedNotes);
     setNotes(sortedNotes);
     setFilteredNotes(sortedNotes);
@@ -50,13 +59,58 @@ const NotesPage = () => {
   const handleSearchChange = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-    setFilteredNotes(notes.filter((note) => JSON.parse(note.body).toLowerCase().includes(query)));
+    setFilteredNotes(
+      notes.filter((note) => JSON.parse(note.body).toLowerCase().includes(query))
+    );
   };
-  
+
+  // Right-click handler for notes
+  const handleNoteRightClick = (e, note) => {
+    e.preventDefault();
+    const { translation, scale } = transform;
+
+    // Raw page coordinates
+    const pageX = e.clientX;
+    const pageY = e.clientY;
+
+    // Map-space coordinates (if needed for actions)
+    const mapX = (pageX - translation.x) / scale;
+    const mapY = (pageY - translation.y) / scale;
+
+    setContextMenu({
+      pageX,
+      pageY,
+      mapX,
+      mapY,
+      note,
+    });
+  };
+
+  // Background right-click handler
+  const handleBackgroundRightClick = (e) => {
+    e.preventDefault(); // Prevent default browser menu
+
+    const { translation, scale } = transform;
+
+    const pageX = e.clientX;
+    const pageY = e.clientY;
+
+    const mapX = (pageX - translation.x) / scale;
+    const mapY = (pageY - translation.y) / scale;
+
+    setContextMenu({
+      pageX,
+      pageY,
+      mapX,
+      mapY,
+      note: null, // null means background menu
+    });
+  };
+
 
   return (
     <div
-      onContextMenu={(e) => e.preventDefault()}
+      //onContextMenu={(e) => e.preventDefault()}
       style={{ width: "100vw", height: "100vh", position: "relative" }}
     >
       <input
@@ -83,19 +137,11 @@ const NotesPage = () => {
         onChange={(newTransform) => {
           if (!isPanningDisabled) {
             setTransform(newTransform);
-
-            if (contextMenu) {
-              setContextMenu((prev) => ({
-                ...prev,
-                x: contextMenu.x,// + (newTransform.translation.x - transform.translation.x),
-                y: contextMenu.y,// + (newTransform.translation.y - transform.translation.y),
-                //note: prev.note,
-              }))
-            }
           }
         }}
       >
         <div
+          onContextMenu={handleBackgroundRightClick}
           style={{
             position: "absolute",
             top: 0,
@@ -119,17 +165,50 @@ const NotesPage = () => {
             onPanningStateChange={handlePanningStateChange}
             infoPopup={infoPopup}
             setInfoPopup={setInfoPopup}
-            setContextMenu={setContextMenu}
-            contextMenu={contextMenu}
+            onNoteRightClick={handleNoteRightClick}
           />
         ))}
       </MapInteractionCSS>
 
+      {contextMenu &&
+        ReactDOM.createPortal(
+          <ContextMenu
+            id="context-menu"
+            x={contextMenu.pageX}
+            y={contextMenu.pageY}
+            type={contextMenu.note ? "note" : "background"}
+
+        onOptionSelect={(action) => {
+          if (action === "info" && contextMenu.note) {
+              // Open the info popup with the note data
+              setInfoPopup({
+                noteId: contextMenu.note.$id,
+                x: contextMenu.pageX,
+                y: contextMenu.pageY,
+                note: { title: JSON.parse(contextMenu.note.body) },
+                info: JSON.parse(contextMenu.note.noteData).vehicleInfo || {},
+              });
+            }
+            setContextMenu(null);
+          }}
+              noteLabel={contextMenu.note ? JSON.parse(contextMenu.note.body) : undefined}
+            />,
+            document.body
+        )}
+      
+      {infoPopup && (
+        <InfoPopup
+          //infoPopup={infoPopup}
+          //setInfoPopup={setInfoPopup}
+          note
+          onClose={() => setInfoPopup(null)}
+        />
+      )}
+
+
+      
     </div>
   );
 };
 
 export default NotesPage;
-
-
-
