@@ -1,17 +1,13 @@
 
-export const GLOBAL_SIZE = JSON.stringify({ width: "200px", height: "75px", padding: "0px" });
-
 
 export const fakeData = [
     {
         $id: 1,
-        noteData: JSON.stringify({
+        noteData: {
             id: "7J3ZZ56T7834500003",
-            width: GLOBAL_SIZE.width,
-            height: GLOBAL_SIZE.height,
             colorHeader: "#FED0FD",
             colorBody: "#FEE5FD",
-            colorText: "#18181A",
+            //colorText: "#18181A",
             vehicleInfo: {
                 VIN: "7J3ZZ56T7834500003",
                 YEAR: "1980",
@@ -29,18 +25,16 @@ export const fakeData = [
                     { label: "Passenger Headlight", value: "passenger_headlight" },
                 ],
             },
-        }),
+        },
         position: { x: 100, y: 50 },
     },
     {
         $id: 2,
-        noteData: JSON.stringify({
+        noteData: {
             id: "1HK503JB9P5523729",
-            width: GLOBAL_SIZE.width,
-            height: GLOBAL_SIZE.height,
             colorHeader: "#9BD1DE",
             colorBody: "#A6DCE9",
-            colorText: "#18181A",
+            //colorText: "#18181A",
             vehicleInfo: {
                 VIN: "1HK503JB9P5523729",
                 YEAR: "1945",
@@ -56,18 +50,16 @@ export const fakeData = [
                     { label: "Driver Door", value: "driver_door" },
                 ],
             },
-        }),
+        },
         position: { x: 100, y: 100 + 50 },
     },
     {
         $id: 3,
-        noteData: JSON.stringify({
+        noteData: {
             id: "YG37025R495800501",
-            width: GLOBAL_SIZE.width,
-            height: GLOBAL_SIZE.height,
             colorHeader: "#FFEFBE",
             colorBody: "#FFF5DF",
-            colorText: "#18181A",
+            //colorText: "#18181A",
             vehicleInfo: {
                 VIN: "YG37025R495800501",
                 YEAR: "2000",
@@ -83,14 +75,10 @@ export const fakeData = [
                     { label: "Radiator", value: "radiator" },
                 ],
             },
-        }),
+        },
         position: { x: 100, y: 175 + 75 },
     },
-].map(item => ({
-    ...item,
-    body: JSON.stringify(
-        JSON.parse(item.noteData).vehicleInfo.YEAR + " " +
-        JSON.parse(item.noteData).vehicleInfo.MAKE + " " +
-        JSON.parse(item.noteData).vehicleInfo.MODEL
-    )
+].map((item) => ({
+  ...item,
+  body: `${item.noteData.vehicleInfo.YEAR} ${item.noteData.vehicleInfo.MAKE} ${item.noteData.vehicleInfo.MODEL}`,
 }));

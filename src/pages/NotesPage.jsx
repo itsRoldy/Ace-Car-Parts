@@ -1,118 +1,135 @@
-
-import React, { useState, useEffect } from "react";
-import ReactDOM from "react-dom";
-import { GLOBAL_SIZE, fakeData as initialNotes } from "../assets/fakeData.js";
-import NoteCard, {InfoPopup, gridSize } from "../components/NoteCard.jsx";
-import { MapInteractionCSS } from "react-map-interaction";
-import ContextMenu from "../components/contextMenus.jsx";
+import React, { useState, useRef, useEffect } from "react";
+import { fakeData as initialNotes } from "../assets/fakeData.js";
+import NoteCard from "../components/NoteCard.jsx";
+import { GRID_CONFIG } from "../components/config.js";
 
 const NotesPage = () => {
   const [notes, setNotes] = useState(initialNotes);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredNotes, setFilteredNotes] = useState(initialNotes);
-  const [isPanningDisabled, setIsPanningDisabled] = useState(false);
-  const [transform, setTransform] = useState({ scale: 1, translation: { x: 0, y: 0 } });
-  const [infoPopup, setInfoPopup] = useState(null);
-  const [contextMenu, setContextMenu] = useState(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [hoverLineY, setHoverLineY] = useState(null);
+  const [dropMenu, setDropMenu] = useState(null);
 
-  const handlePanningStateChange = (state) => {
-    setIsPanningDisabled(state);
-  };
+  const lastPos = useRef({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+  const cardRefs = useRef({});
 
-  // Close context menu on outside click
+  // Zoom handling
   useEffect(() => {
-    const handleClickOutside = () => setContextMenu(null);
-    if (contextMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [contextMenu]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Shift") setIsPanningDisabled(true);
+    const wheelHandler = (e) => {
+      e.preventDefault();
+      const zoomFactor = -e.deltaY * 0.001;
+      setZoom((prev) => Math.min(Math.max(prev + zoomFactor, 0.5), 2));
     };
-    const handleKeyUp = (e) => {
-      if (e.key === "Shift") setIsPanningDisabled(false);
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
+    window.addEventListener("wheel", wheelHandler, { passive: false });
+    return () => window.removeEventListener("wheel", wheelHandler);
   }, []);
 
-  const sortNotes = (notesList) => {
-    return notesList.sort((a, b) => a.position.y - b.position.y);
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (dropMenu) setDropMenu(null);
+    };
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, [dropMenu]);
+
+  const handleSearchChange = (e) => setSearchQuery(e.target.value.toLowerCase());
+
+  const handleMouseMove = (e) => {
+    if (isPanning) {
+      const dx = e.clientX - lastPos.current.x;
+      const dy = e.clientY - lastPos.current.y;
+      setPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      lastPos.current = { x: e.clientX, y: e.clientY };
+      return;
+    }
+
+    const container = containerRef.current;
+    if (!container) return;
+
+    const bounds = container.getBoundingClientRect();
+    const mouseY = (e.clientY - bounds.top - pan.y) / zoom;
+
+    const cards = Array.from(document.querySelectorAll(".note-card"));
+    const cardRects = cards
+      .map((c) => {
+        const r = c.getBoundingClientRect();
+        return {
+          top: (r.top - bounds.top - pan.y) / zoom,
+          bottom: (r.bottom - bounds.top - pan.y) / zoom,
+        };
+      })
+      .sort((a, b) => a.top - b.top);
+
+    let lineY = null;
+    for (let i = 0; i < cardRects.length - 1; i++) {
+      const a = cardRects[i];
+      const b = cardRects[i + 1];
+      if (mouseY > a.bottom && mouseY < b.top) {
+        lineY = (a.bottom + b.top) / 2;
+        break;
+      }
+    }
+
+    setHoverLineY(lineY);
   };
 
-  const onPositionChange = (updatedNote) => {
-    const updatedNotes = notes.map((note) =>
-      note.$id === updatedNote.$id ? updatedNote : note
-    );
-    const sortedNotes = sortNotes(updatedNotes);
-    setNotes(sortedNotes);
-    setFilteredNotes(sortedNotes);
-  };
+  const handleMouseUp = () => setIsPanning(false);
 
-  const handleSearchChange = (e) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-    setFilteredNotes(
-      notes.filter((note) => JSON.parse(note.body).toLowerCase().includes(query))
-    );
-  };
+  const handleDrop = (id, e) => {
+    if (hoverLineY === null || !id) return;
 
-  // Right-click handler for notes
-  const handleNoteRightClick = (e, note) => {
-    e.preventDefault();
-    const { translation, scale } = transform;
+    const container = containerRef.current;
+    if (!container) return;
+    const bounds = container.getBoundingClientRect();
 
-    // Raw page coordinates
-    const pageX = e.clientX;
-    const pageY = e.clientY;
+    const cards = Array.from(document.querySelectorAll(".note-card"));
+    const cardRects = cards
+      .map((c) => {
+        const r = c.getBoundingClientRect();
+        return { id: c.dataset.id, top: r.top - bounds.top, bottom: r.bottom - bounds.top };
+      })
+      .sort((a, b) => a.top - b.top);
 
-    // Map-space coordinates (if needed for actions)
-    const mapX = (pageX - translation.x) / scale;
-    const mapY = (pageY - translation.y) / scale;
+    let insertIndex = notes.length;
+    for (let i = 0; i < cardRects.length - 1; i++) {
+      if (hoverLineY > cardRects[i].bottom && hoverLineY < cardRects[i + 1].top) {
+        insertIndex = i + 1;
+        break;
+      }
+    }
 
-    setContextMenu({
-      pageX,
-      pageY,
-      mapX,
-      mapY,
-      note,
+    // Show context menu at cursor
+    setDropMenu({
+      x: e.clientX,
+      y: e.clientY,
+      insertIndex,
+      draggingNoteId: id,
     });
+
+    setHoverLineY(null);
   };
 
-  // Background right-click handler
-  const handleBackgroundRightClick = (e) => {
-    e.preventDefault(); // Prevent default browser menu
-
-    const { translation, scale } = transform;
-
-    const pageX = e.clientX;
-    const pageY = e.clientY;
-
-    const mapX = (pageX - translation.x) / scale;
-    const mapY = (pageY - translation.y) / scale;
-
-    setContextMenu({
-      pageX,
-      pageY,
-      mapX,
-      mapY,
-      note: null, // null means background menu
-    });
-  };
-
+  const filteredNotes = notes.filter((note) => {
+    const vehicleInfo = note?.noteData?.vehicleInfo || {};
+    const { VIN = "", YEAR = "", MAKE = "", MODEL = "" } = vehicleInfo;
+    const body = note?.body || "";
+    const searchText = `${YEAR} ${MAKE} ${MODEL} ${VIN} ${body}`.toLowerCase();
+    return searchText.includes(searchQuery);
+  });
 
   return (
     <div
-      //onContextMenu={(e) => e.preventDefault()}
-      style={{ width: "100vw", height: "100vh", position: "relative" }}
+      style={{ width: "100vw", height: "100vh", overflow: "hidden", position: "relative" }}
+      onContextMenu={(e) => e.preventDefault()}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
     >
+      {/* Search Input */}
       <input
         type="text"
         placeholder="Search notes..."
@@ -120,93 +137,139 @@ const NotesPage = () => {
         onChange={handleSearchChange}
         style={{
           position: "absolute",
-          top: "20px",
-          right: "20px",
+          top: 20,
+          right: 20,
           padding: "8px",
           borderRadius: "5px",
           backgroundColor: "#2E2E2E",
-          color: "#FFFFFF",
-          fontSize: "14px",
-          width: "200px",
+          color: "#FFF",
+          fontSize: 14,
+          width: 200,
           zIndex: 999,
         }}
       />
-      <MapInteractionCSS
-        draggable={!isPanningDisabled}
-        value={transform}
-        onChange={(newTransform) => {
-          if (!isPanningDisabled) {
-            setTransform(newTransform);
+
+      {/* Grid background */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "#212228",
+          backgroundImage: `
+            linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px)
+          `,
+          backgroundSize: `${GRID_CONFIG.size * zoom}px ${GRID_CONFIG.size * zoom}px`,
+          backgroundPosition: `${pan.x}px ${pan.y}px`,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Notes Layer */}
+      <div
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "relative",
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+          transformOrigin: "0 0",
+          cursor: isPanning ? "grabbing" : "grab",
+          zIndex: 1,
+        }}
+        onMouseDown={(e) => {
+          if (e.button === 0) {
+            setIsPanning(true);
+            lastPos.current = { x: e.clientX, y: e.clientY };
           }
         }}
       >
-        <div
-          onContextMenu={handleBackgroundRightClick}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100000px",
-            height: "100000px",
-            transform: "translate(-50000px, -50000px)",
-            backgroundColor: "#212228",
-            backgroundImage: `linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px)`,
-            backgroundSize: `${gridSize}px ${gridSize}px`,
-          }}
-        />
-        {notes.map((note) => (
+        {filteredNotes.map((note) => (
           <NoteCard
             key={note.$id}
             note={note}
-            allNotes={notes}
-            transform={transform}
-            onPositionChange={onPositionChange}
-            onPanningStateChange={handlePanningStateChange}
-            infoPopup={infoPopup}
-            setInfoPopup={setInfoPopup}
-            onNoteRightClick={handleNoteRightClick}
+            zoom={zoom}
+            snap={GRID_CONFIG.snap}
+            ref={(el) => (cardRefs.current[note.$id] = el)}
+            className="note-card"
+            onPositionChange={(updatedNote) =>
+              setNotes((prev) =>
+                prev.map((n) => (n.$id === updatedNote.$id ? updatedNote : n))
+              )
+            }
+            onDragEnd={(id, e) => handleDrop(id, e)}
           />
         ))}
-      </MapInteractionCSS>
 
-      {contextMenu &&
-        ReactDOM.createPortal(
-          <ContextMenu
-            id="context-menu"
-            x={contextMenu.pageX}
-            y={contextMenu.pageY}
-            type={contextMenu.note ? "note" : "background"}
-
-        onOptionSelect={(action) => {
-          if (action === "info" && contextMenu.note) {
-              // Open the info popup with the note data
-              setInfoPopup({
-                noteId: contextMenu.note.$id,
-                x: contextMenu.pageX,
-                y: contextMenu.pageY,
-                note: { title: JSON.parse(contextMenu.note.body) },
-                info: JSON.parse(contextMenu.note.noteData).vehicleInfo || {},
-              });
-            }
-            setContextMenu(null);
-          }}
-              noteLabel={contextMenu.note ? JSON.parse(contextMenu.note.body) : undefined}
-            />,
-            document.body
+        {/* Horizontal yellow line */}
+        {hoverLineY !== null && (
+          <div
+            style={{
+              position: "absolute",
+              top: hoverLineY,
+              left: 0,
+              width: "100%",
+              height: 2,
+              backgroundColor: "yellow",
+              pointerEvents: "none",
+              zIndex: 500,
+            }}
+          />
         )}
-      
-      {infoPopup && (
-        <InfoPopup
-          //infoPopup={infoPopup}
-          //setInfoPopup={setInfoPopup}
-          note
-          onClose={() => setInfoPopup(null)}
-        />
+      </div>
+
+      {/* Drop Context Menu */}
+      {dropMenu && (
+        <div
+          style={{
+            position: "fixed",
+            top: dropMenu.y,
+            left: dropMenu.x,
+            background: "#2E2E2E",
+            border: "1px solid #666",
+            borderRadius: 6,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+            zIndex: 2000,
+            padding: "4px",
+          }}
+          onClick={(e) => e.stopPropagation()} // prevent outside click close
+        >
+          <div
+            style={{ padding: "6px 12px", cursor: "pointer", color: "#fff" }}
+            onClick={() => {
+              setNotes((prev) => {
+                const dragged = prev.find((n) => n.$id === dropMenu.draggingNoteId);
+                const without = prev.filter((n) => n.$id !== dropMenu.draggingNoteId);
+                // Insert ABOVE
+                without.splice(dropMenu.insertIndex - 1, 0, dragged);
+                return without;
+              });
+              setDropMenu(null);
+            }}
+          >
+            Insert Above
+          </div>
+          <div
+            style={{ padding: "6px 12px", cursor: "pointer", color: "#fff" }}
+            onClick={() => {
+              setNotes((prev) => {
+                const dragged = prev.find((n) => n.$id === dropMenu.draggingNoteId);
+                const without = prev.filter((n) => n.$id !== dropMenu.draggingNoteId);
+                // Insert BELOW
+                without.splice(dropMenu.insertIndex, 0, dragged);
+                return without;
+              });
+              setDropMenu(null);
+            }}
+          >
+            Insert Below
+          </div>
+        </div>
       )}
-
-
-      
     </div>
   );
 };
